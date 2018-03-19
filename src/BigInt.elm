@@ -193,19 +193,31 @@ fromString : String -> Maybe BigInt
 fromString x =
     case String.toList x of
         [] ->
-            Just zero
+            Nothing
+
+        '-' :: '0' :: 'x' :: [] ->
+            Nothing
 
         '-' :: '0' :: 'x' :: xs ->
             fromHexString_ xs
                 |> Maybe.map (mul (fromInt -1))
 
+        '-' :: [] ->
+            Nothing
+
         '-' :: xs ->
             fromString_ xs
                 |> Maybe.map (mkBigInt Negative)
 
+        '+' :: [] ->
+            Nothing
+
         '+' :: xs ->
             fromString_ xs
                 |> Maybe.map (mkBigInt Positive)
+
+        '0' :: 'x' :: [] ->
+            Nothing
 
         '0' :: 'x' :: xs ->
             fromHexString_ xs
