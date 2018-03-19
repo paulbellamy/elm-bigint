@@ -187,7 +187,16 @@ fromInt x =
         |> normalise
 
 
-{-| Makes an BigInt from a String
+{-| Makes an BigInt from a Integer or Hex String, positive or negative
+
+    fromString "123" == Just (BigInt.Pos ...)
+    fromString "0x456" == Just (BigInt.Pos ...)
+    fromString "-123" == Just (BigInt.Neg ...)
+    fromString "-0x123" == Just (BigInt.Neg ...)
+    fromString "" == Nothing
+    fromString "0x" == Nothing
+    fromString "this is not a number :P" == Nothing
+
 -}
 fromString : String -> Maybe BigInt
 fromString x =
