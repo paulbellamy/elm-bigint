@@ -1,5 +1,5 @@
 {
-    "version": "2.0.0",
+    "version": "1.0.2",
     "summary": "unlimited size integers",
     "repository": "https://github.com/hickscorp/elm-bigint.git",
     "license": "MIT",
