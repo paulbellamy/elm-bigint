@@ -143,7 +143,7 @@ type MagnitudeNotNormalised
 
 mkBigIntNotNormalised : Sign -> List Int -> BigIntNotNormalised
 mkBigIntNotNormalised s digits =
-    BigIntNotNormalised s (MagnitudeNotNormalised (Debug.log "not-normalized" digits))
+    BigIntNotNormalised s (MagnitudeNotNormalised digits)
 
 
 toDigits : BigInt -> List Int
@@ -544,15 +544,17 @@ bigIntToInt_ bigInt =
             b * (10 ^ maxDigitMagnitude) + a
 
         _ ->
-            Debug.todo "No suitable shortcut conversion in hexMagnitudeToString"
+            -- Note: In Elm 0.18, was `Debug.crash "No suitable shortcut conversion in hexMagnitudeToString"`
+            -- Using "impossible default value" instead. Needs better testing to prove this is impossible.
+            0
 
 
 hexMagnitudeToString : BigInt -> String
 hexMagnitudeToString bigInt =
     case divmod bigInt eightHexDigits of
         Nothing ->
-            -- Debug.todo "Failure converting to hex string."
-            "Failure converting to hex string."
+            -- Another "impossible default value" instead of Debug.crash
+            "Failure converting BigInt to hex string.\nShould be impossible. Open up PR on elm-bigint repo."
 
         Just ( d, r ) ->
             let
