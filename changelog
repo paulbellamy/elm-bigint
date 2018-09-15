@@ -1,0 +1,5 @@
+1.0.2
++ Updated to 0.19
++ Mixed case hex strings are now valid.
++ (BigInt.fromString "") no longer equals (BigInt.fromString "0")
++ mod renamed to modBy. Returns Maybe instead of crashing now. `modBy 0 n` == Nothing
