@@ -795,6 +795,8 @@ yet fs /= fi
 Notice the second item in fi's list is greater than the baseDigit. Which should not be possible.
 This led to bugs like, BigInt.fromInt 1234567812345678 |> BigInt.toHexString == CRASH!!
 
+This bug was fixed by checking `carry > baseDigit`, and proceeding accordingly.
+
 `Debug.crash` was removed in Elm 0.19, so the recourse for internal lib functions was
 to use "impossible default values" instead. Which made this bug all the more nefarious.
 
