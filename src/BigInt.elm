@@ -514,14 +514,14 @@ toHexString : BigInt -> String
 toHexString bigInt =
     case bigInt of
         Zer ->
-            "0"
+            "0x0"
 
         Pos mag ->
             if mag == Magnitude [] then
-                "0"
+                "0x0"
 
             else
-                hexMagnitudeToString (Pos mag)
+                "0x" ++ hexMagnitudeToString (Pos mag)
 
         Neg mag ->
             "-" ++ toHexString (mul (fromInt -1) bigInt)
@@ -546,7 +546,7 @@ bigIntToInt_ bigInt =
         _ ->
             -- Note: In Elm 0.18, was `Debug.crash "No suitable shortcut conversion in hexMagnitudeToString"`
             -- Using "impossible default value" instead. Needs better testing to prove this is impossible.
-            0
+            666
 
 
 hexMagnitudeToString : BigInt -> String
@@ -784,33 +784,6 @@ normaliseMagnitude (MagnitudeNotNormalised xs) =
     Magnitude (xs |> normaliseDigitList 0 |> dropZeroes)
 
 
-{-| Note on normaliseDigitList bug fix
-
-Given 1234567812345678 == 0x462D537E7EF4E
-fi = Just <| BigInt.fromInt 1234567812345678 == Just (Pos (Magnitude [2345678,123456781]))
-fs = BigInt.fromString "0x462D537E7EF4E" == Just (Pos (Magnitude [2345678,3456781,12]))
-
-yet fs /= fi
-
-Notice the second item in fi's list is greater than the baseDigit. Which should not be possible.
-This led to bugs like, BigInt.fromInt 1234567812345678 |> BigInt.toHexString == CRASH!!
-
-This bug was fixed by checking `carry > baseDigit`, and proceeding accordingly.
-
-`Debug.crash` was removed in Elm 0.19, so the recourse for internal lib functions was
-to use "impossible default values" instead. Which made this bug all the more nefarious.
-
-I'm still wrapping my head around the techniques used in this library, so there might be a better,
-more efficient fix. Or there might still exist a bug. Fuzz testing will help. Please open an issue,
-or make a PR, if you have better ideas.
-
-PS - elm/bytes might allow us to make a better bigint library once released.
-
-Thanks
-cmditch (current maintainer, not original author)
-9/15/2018
-
--}
 normaliseDigitList : Int -> List Int -> List Int
 normaliseDigitList carry xs =
     case xs of
