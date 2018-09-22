@@ -274,12 +274,12 @@ stringTests =
                         mul midLargeInt midLargeInt
                 in
                 Expect.equal
-                    (Maybe.map toHexString fromString)
+                    (Maybe.andThen toHexString fromString)
                     (Just "2386f26fc10000")
         , fuzz smallPositiveIntegers "Same results as rtfeldman/hex" <|
             \x ->
                 BigInt.toHexString (fromInt x)
-                    |> Expect.equal (Hex.toString x)
+                    |> Expect.equal (Just <| Hex.toString x)
         ]
 
 

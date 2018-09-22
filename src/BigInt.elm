@@ -44,6 +44,7 @@ import Hex
 import List.Extra
 import Maybe exposing (Maybe)
 import Result.Extra
+import Maybe.Extra
 import String
 
 
@@ -73,8 +74,8 @@ signProduct x y =
 
 
 signNegate : Sign -> Sign
-signNegate sign =
-    case sign of
+signNegate s =
+    case s of
         Positive ->
             Negative
 
@@ -117,8 +118,8 @@ type Magnitude
 
 
 mkBigInt : Sign -> Magnitude -> BigInt
-mkBigInt s ((Magnitude digits) as mag) =
-    if List.isEmpty digits then
+mkBigInt s ((Magnitude d) as mag) =
+    if List.isEmpty d then
         Zer
 
     else
@@ -142,13 +143,13 @@ type MagnitudeNotNormalised
 
 
 mkBigIntNotNormalised : Sign -> List Int -> BigIntNotNormalised
-mkBigIntNotNormalised s digits =
-    BigIntNotNormalised s (MagnitudeNotNormalised digits)
+mkBigIntNotNormalised s digitList =
+    BigIntNotNormalised s (MagnitudeNotNormalised digitList)
 
 
 digits : BigInt -> List Int
-digits bigInt =
-    case bigInt of
+digits i =
+    case i of
         Zer ->
             []
 
@@ -229,8 +230,7 @@ fromString_ x =
     List.reverse x
         |> List.Extra.greedyGroupsOf maxDigitMagnitude
         |> List.map (List.reverse >> String.fromList >> String.toInt)
-        |> Result.Extra.combine
-        |> Result.toMaybe
+        |> Maybe.Extra.combine
         |> Maybe.map (emptyZero << Magnitude)
 
 
@@ -272,7 +272,7 @@ add a b =
             sameSizeNotNormalized ma mb
 
         added =
-            List.map (\( a, b ) -> (+) a b) pairs
+            List.map (\( x, y ) -> (+) x y) pairs
     in
     normalise <| BigIntNotNormalised Positive (MagnitudeNotNormalised added)
 
@@ -501,8 +501,8 @@ fillZeroes =
 
 
 revMagnitudeToString : Magnitude -> String
-revMagnitudeToString (Magnitude digits) =
-    case List.reverse digits of
+revMagnitudeToString (Magnitude d) =
+    case List.reverse d of
         [] ->
             "0"
 
@@ -512,59 +512,61 @@ revMagnitudeToString (Magnitude digits) =
 
 {-| Print the number as a hex string.
 -}
-toHexString : BigInt -> String
+toHexString : BigInt -> Maybe String
 toHexString bigInt =
     case bigInt of
         Zer ->
-            "0"
+            Just "0"
 
         Pos mag ->
             if mag == Magnitude [] then
-                "0"
+                Just "0"
 
             else
                 hexMagnitudeToString (Pos mag)
 
         Neg mag ->
-            "-" ++ toHexString (mul (fromInt -1) bigInt)
-
+            toHexString (mul (fromInt -1) bigInt)
+                |> Maybe.map (\s -> "-" ++ s)
 
 
 -- Shortcut conversion to int for hex handling
 
 
-bigIntToInt_ : BigInt -> Int
+bigIntToInt_ : BigInt -> Maybe Int
 bigIntToInt_ bigInt =
     case bigInt of
         Zer ->
-            0
+            Just 0
 
         Pos (Magnitude [ a ]) ->
-            a
+            Just a
 
         Pos (Magnitude [ a, b ]) ->
-            b * (10 ^ maxDigitMagnitude) + a
+            Just <| b * (10 ^ maxDigitMagnitude) + a
 
         _ ->
-            Debug.crash "No suitable shortcut conversion in hexMagnitudeToString"
+            -- No suitable shortcut conversion in hexMagnitudeToString
+            Nothing
 
 
-hexMagnitudeToString : BigInt -> String
+hexMagnitudeToString : BigInt -> Maybe String
 hexMagnitudeToString bigInt =
-    case divmod bigInt eightHexDigits of
-        Nothing ->
-            Debug.crash "Failure converting to hex string."
+    divmod bigInt eightHexDigits
+        |> Maybe.andThen (\( d, r ) ->
+              bigIntToInt_ r
+                  |> Maybe.map Hex.toString
+                  |> Maybe.andThen (\rString ->
+                      if d == zero then
+                          Just rString
 
-        Just ( d, r ) ->
-            let
-                rString =
-                    Hex.toString (bigIntToInt_ r)
-            in
-            if d == fromInt 0 then
-                rString
-
-            else
-                hexMagnitudeToString d ++ String.padLeft 8 '0' rString
+                      else
+                          hexMagnitudeToString d
+                              |> Maybe.map (\lString ->
+                                  lString ++ String.padLeft 8 '0' rString
+                              )
+                  )
+        )
 
 
 {-| BigInt division. Produces 0 when dividing by 0 (like (//)).
@@ -576,16 +578,11 @@ div num den =
         |> Maybe.withDefault zero
 
 
-{-| Modulus. Crashes on zero (like (%)).
+{-| Modulus.
 -}
-mod : BigInt -> BigInt -> BigInt
+mod : BigInt -> BigInt -> Maybe BigInt
 mod num den =
-    case divmod num den |> Maybe.map Tuple.second of
-        Nothing ->
-            Debug.crash "Cannot perform mod 0. Division by zero error."
-
-        Just x ->
-            x
+    divmod num den |> Maybe.map Tuple.second
 
 
 {-| Square.
@@ -771,10 +768,10 @@ two =
 This takes a messed up number and cleans it up.
 -}
 normalise : BigIntNotNormalised -> BigInt
-normalise (BigIntNotNormalised s digits) =
+normalise (BigIntNotNormalised s ds) =
     let
         (Magnitude normalisedMag) =
-            normaliseMagnitude digits
+            normaliseMagnitude ds
     in
     if isNegativeMagnitude normalisedMag then
         normalise (mkBigIntNotNormalised (signNegate s) (reverseMagnitude normalisedMag))
@@ -823,16 +820,16 @@ toPositiveSign bigInt =
         Zer ->
             mkBigIntNotNormalised Zero []
 
-        Neg (Magnitude digits) ->
-            mkBigIntNotNormalised Positive (reverseMagnitude digits)
+        Neg (Magnitude ds) ->
+            mkBigIntNotNormalised Positive (reverseMagnitude ds)
 
-        Pos (Magnitude digits) ->
-            mkBigIntNotNormalised Positive digits
+        Pos (Magnitude ds) ->
+            mkBigIntNotNormalised Positive ds
 
 
 isNegativeMagnitude : List Int -> Bool
-isNegativeMagnitude digits =
-    case List.Extra.last digits of
+isNegativeMagnitude ds =
+    case List.Extra.last ds of
         Nothing ->
             False
 
