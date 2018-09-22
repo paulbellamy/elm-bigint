@@ -1,14 +1,11 @@
 module BigIntBenchmarks exposing (main)
 
-import AbsBenchmark
-import Benchmark exposing (describe)
-import Benchmark.Runner exposing (BenchmarkProgram, program)
-
-
 -- Individual Benchmarks
 
 import AbsBenchmark
 import AddBenchmark
+import Benchmark exposing (describe)
+import Benchmark.Runner exposing (BenchmarkProgram, program)
 import CompareBenchmark
 import DivmodBenchmark
 import FromIntBenchmark

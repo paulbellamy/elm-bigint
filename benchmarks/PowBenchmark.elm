@@ -1,4 +1,4 @@
-module PowBenchmark exposing (main, benchmark)
+module PowBenchmark exposing (benchmark, main)
 
 import Benchmark exposing (..)
 import Benchmark.Runner exposing (BenchmarkProgram, program)

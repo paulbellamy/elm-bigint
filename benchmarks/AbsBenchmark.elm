@@ -1,4 +1,4 @@
-module AbsBenchmark exposing (main, benchmark)
+module AbsBenchmark exposing (benchmark, main)
 
 import Benchmark exposing (..)
 import Benchmark.Runner exposing (BenchmarkProgram, program)

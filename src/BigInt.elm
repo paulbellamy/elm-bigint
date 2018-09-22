@@ -1,29 +1,11 @@
-module BigInt
-    exposing
-        ( BigInt
-        , abs
-        , add
-        , compare
-        , div
-        , divmod
-        , fromInt
-        , fromString
-        , gt
-        , gte
-        , isEven
-        , isOdd
-        , lt
-        , lte
-        , max
-        , min
-        , mod
-        , mul
-        , negate
-        , pow
-        , sub
-        , toString
-        , toHexString
-        )
+module BigInt exposing
+    ( BigInt
+    , fromInt, fromString, toString, toHexString
+    , add, sub, mul, div, mod, divmod, pow
+    , abs, negate
+    , compare, gt, gte, lt, lte, max, min
+    , isEven, isOdd
+    )
 
 {-| Infinite digits integers
 
@@ -57,12 +39,12 @@ module BigInt
 -}
 
 import Basics
-import Constants exposing (maxDigitValue, maxDigitMagnitude, hexDigitMagnitude)
+import Constants exposing (hexDigitMagnitude, maxDigitMagnitude, maxDigitValue)
+import Hex
 import List.Extra
 import Maybe exposing (Maybe)
 import Result.Extra
 import String
-import Hex
 
 
 {-| The sign of the bigInt
@@ -82,8 +64,10 @@ signProduct : Sign -> Sign -> Sign
 signProduct x y =
     if x == Zero || y == Zero then
         Zero
+
     else if x == y then
         Positive
+
     else
         Negative
 
@@ -136,6 +120,7 @@ mkBigInt : Sign -> Magnitude -> BigInt
 mkBigInt s ((Magnitude digits) as mag) =
     if List.isEmpty digits then
         Zer
+
     else
         case s of
             Zero ->
@@ -287,9 +272,9 @@ add a b =
             sameSizeNotNormalized ma mb
 
         added =
-            List.map (uncurry (+)) pairs
+            List.map (\( a, b ) -> (+) a b) pairs
     in
-        normalise <| BigIntNotNormalised Positive (MagnitudeNotNormalised added)
+    normalise <| BigIntNotNormalised Positive (MagnitudeNotNormalised added)
 
 
 {-| Changes the sign of an BigInt
@@ -373,7 +358,7 @@ mulMagnitudes (Magnitude mag1) (Magnitude mag2) =
                         (mkBigInt Positive accum)
                         (mkBigInt Positive (Magnitude (0 :: rest)))
             in
-                magnitude bigInt
+            magnitude bigInt
 
 
 mulSingleDigit : Magnitude -> Int -> Magnitude
@@ -427,6 +412,7 @@ compareMagnitude x y xs ys =
         ( x_ :: xss, y_ :: yss ) ->
             if x_ == y_ then
                 compareMagnitude x y xss yss
+
             else
                 compareMagnitude x_ y_ xss yss
 
@@ -478,6 +464,7 @@ max : BigInt -> BigInt -> BigInt
 max x y =
     if lt x y then
         y
+
     else
         x
 
@@ -488,6 +475,7 @@ min : BigInt -> BigInt -> BigInt
 min x y =
     if gt x y then
         y
+
     else
         x
 
@@ -509,7 +497,7 @@ toString bigInt =
 
 fillZeroes : Int -> String
 fillZeroes =
-    String.padLeft maxDigitMagnitude '0' << Basics.toString
+    String.padLeft maxDigitMagnitude '0' << String.fromInt
 
 
 revMagnitudeToString : Magnitude -> String
@@ -519,7 +507,7 @@ revMagnitudeToString (Magnitude digits) =
             "0"
 
         x :: xs ->
-            String.concat <| Basics.toString x :: List.map fillZeroes xs
+            String.concat <| String.fromInt x :: List.map fillZeroes xs
 
 
 {-| Print the number as a hex string.
@@ -533,11 +521,12 @@ toHexString bigInt =
         Pos mag ->
             if mag == Magnitude [] then
                 "0"
+
             else
                 hexMagnitudeToString (Pos mag)
 
         Neg mag ->
-            "-" ++ (toHexString (mul (fromInt -1) bigInt))
+            "-" ++ toHexString (mul (fromInt -1) bigInt)
 
 
 
@@ -571,10 +560,11 @@ hexMagnitudeToString bigInt =
                 rString =
                     Hex.toString (bigIntToInt_ r)
             in
-                if d == (fromInt 0) then
-                    rString
-                else
-                    (hexMagnitudeToString d) ++ (String.padLeft 8 '0' rString)
+            if d == fromInt 0 then
+                rString
+
+            else
+                hexMagnitudeToString d ++ String.padLeft 8 '0' rString
 
 
 {-| BigInt division. Produces 0 when dividing by 0 (like (//)).
@@ -611,17 +601,17 @@ isEven : BigInt -> Bool
 isEven num =
     let
         even i =
-            i % 2 == 0
+            modBy 2 i == 0
     in
-        case num of
-            Zer ->
-                True
+    case num of
+        Zer ->
+            True
 
-            Pos (Magnitude mag) ->
-                even (List.head mag |> Maybe.withDefault 0)
+        Pos (Magnitude mag) ->
+            even (List.head mag |> Maybe.withDefault 0)
 
-            Neg (Magnitude mag) ->
-                even (List.head mag |> Maybe.withDefault 0)
+        Neg (Magnitude mag) ->
+            even (List.head mag |> Maybe.withDefault 0)
 
 
 {-| Parity Check - Odd.
@@ -652,8 +642,10 @@ powHelp work num exp =
         Pos _ ->
             if exp == one then
                 mul work num
+
             else if isEven exp then
                 powHelp work (square num) (div exp two)
+
             else
                 powHelp (mul num work) (square num) (div (sub exp one) two)
 
@@ -664,6 +656,7 @@ divmod : BigInt -> BigInt -> Maybe ( BigInt, BigInt )
 divmod num den =
     if den == zero then
         Nothing
+
     else
         let
             cand_l =
@@ -675,10 +668,10 @@ divmod num den =
                     (abs num)
                     (abs den)
         in
-            Just
-                ( mkBigInt (signProduct (sign num) (sign den)) (magnitude d)
-                , mkBigInt (sign num) (magnitude m)
-                )
+        Just
+            ( mkBigInt (signProduct (sign num) (sign den)) (magnitude d)
+            , mkBigInt (sign num) (magnitude m)
+            )
 
 
 divmodDigit : BigInt -> BigInt -> BigInt -> ( BigInt, BigInt )
@@ -690,6 +683,7 @@ divmodDigit_ : Int -> BigInt -> BigInt -> BigInt -> ( BigInt, BigInt )
 divmodDigit_ to_test padding num den =
     if to_test == 0 then
         ( zero, num )
+
     else
         let
             x =
@@ -701,19 +695,21 @@ divmodDigit_ to_test padding num den =
             ( newdiv, newmod ) =
                 if lte candidate num then
                     ( mul x padding, sub num candidate )
+
                 else
                     ( zero, num )
 
             ( restdiv, restmod ) =
                 divmodDigit_ (to_test // 2) padding newmod den
         in
-            ( add newdiv restdiv, restmod )
+        ( add newdiv restdiv, restmod )
 
 
 divMod_ : Int -> BigInt -> BigInt -> ( BigInt, BigInt )
 divMod_ n num den =
     if n == 0 then
         divmodDigit (padDigits n) num den
+
     else
         let
             ( cdiv, cmod ) =
@@ -722,7 +718,7 @@ divMod_ n num den =
             ( rdiv, rmod ) =
                 divMod_ (n - 1) cmod den
         in
-            ( add cdiv rdiv, rmod )
+        ( add cdiv rdiv, rmod )
 
 
 maxDigitBits : Int
@@ -780,10 +776,11 @@ normalise (BigIntNotNormalised s digits) =
         (Magnitude normalisedMag) =
             normaliseMagnitude digits
     in
-        if isNegativeMagnitude normalisedMag then
-            normalise (mkBigIntNotNormalised (signNegate s) (reverseMagnitude normalisedMag))
-        else
-            mkBigInt s (Magnitude normalisedMag)
+    if isNegativeMagnitude normalisedMag then
+        normalise (mkBigIntNotNormalised (signNegate s) (reverseMagnitude normalisedMag))
+
+    else
+        mkBigInt s (Magnitude normalisedMag)
 
 
 normaliseMagnitude : MagnitudeNotNormalised -> Magnitude
@@ -802,7 +799,7 @@ normaliseDigitList carry xs =
                 ( newCarry, x_ ) =
                     normaliseDigit (x + carry)
             in
-                x_ :: normaliseDigitList newCarry xs_
+            x_ :: normaliseDigitList newCarry xs_
 
 
 normaliseDigit : Int -> ( Int, Int )
@@ -810,8 +807,9 @@ normaliseDigit x =
     if x < 0 then
         normaliseDigit (x + baseDigit)
             |> Tuple.mapFirst ((+) -1)
+
     else
-        ( x // baseDigit, rem x baseDigit )
+        ( x // baseDigit, remainderBy baseDigit x )
 
 
 dropZeroes : List Int -> List Int

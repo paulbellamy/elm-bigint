@@ -1,4 +1,4 @@
-module MulBenchmark exposing (main, benchmark)
+module MulBenchmark exposing (benchmark, main)
 
 import Benchmark exposing (..)
 import Benchmark.Runner exposing (BenchmarkProgram, program)

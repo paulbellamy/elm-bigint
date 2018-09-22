@@ -1,4 +1,4 @@
-module FromStringBenchmark exposing (main, benchmark)
+module FromStringBenchmark exposing (benchmark, main)
 
 import Benchmark exposing (..)
 import Benchmark.Runner exposing (BenchmarkProgram, program)
