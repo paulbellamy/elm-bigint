@@ -18,12 +18,12 @@ main : BenchmarkProgram
 main =
     program <|
         describe "BigInt"
-            [ AbsBenchmark.benchmark
-            , AddBenchmark.benchmark
-            , CompareBenchmark.benchmark
-            , DivmodBenchmark.benchmark
-            , FromIntBenchmark.benchmark
-            , FromStringBenchmark.benchmark
-            , MulBenchmark.benchmark
-            , ToStringBenchmark.benchmark
+            [ AbsBenchmark.suite
+            , AddBenchmark.suite
+            , CompareBenchmark.suite
+            , DivmodBenchmark.suite
+            , FromIntBenchmark.suite
+            , FromStringBenchmark.suite
+            , MulBenchmark.suite
+            , ToStringBenchmark.suite
             ]
